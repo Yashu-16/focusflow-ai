@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Life Efficiency</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <div class="logo-title">AI Efficiency</div>
+          <div class="logo-sub">Your Productivity Assistant</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Focus Session Panel -->
+    <div class="card" id="focus-card">
+      <div class="card-title">Focus Session</div>
+      <div id="focus-status" class="focus-status inactive">● No Active Session</div>
+      <input type="text" id="focus-task" placeholder="What are you working on?" class="input" />
+      <div class="btn-row">
+        <button id="start-focus" class="btn btn-primary">▶ Start Focus</button>
+        <button id="stop-focus" class="btn btn-danger" disabled>■ Stop</button>
+      </div>
+      <div id="focus-timer" class="timer hidden">00:00:00</div>
+    </div>
+
+    <!-- Command Panel -->
+    <div class="card">
+      <div class="card-title">AI Commands</div>
+      <div class="quick-commands">
+        <button class="quick-cmd" data-cmd="Summarize my unread emails">📧 Email Summary</button>
+        <button class="quick-cmd" data-cmd="Give me today's top news summary">📰 News Digest</button>
+        <button class="quick-cmd" data-cmd="What is my productivity score this week?">📊 Weekly Report</button>
+        <button class="quick-cmd" data-cmd="Suggest ways to improve my focus">💡 Focus Tips</button>
+      </div>
+      <div class="command-input-row">
+        <input type="text" id="command-input" placeholder="Type a command..." class="input" />
+        <button id="send-command" class="btn btn-send">→</button>
+      </div>
+    </div>
+
+    <!-- Response Panel -->
+    <div class="card" id="response-card" style="display:none">
+      <div class="card-title">AI Response</div>
+      <div id="response-content" class="response-text"></div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <span>Processing...</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <a href="http://localhost:3000/dashboard" target="_blank" class="dashboard-link">
+        📊 Open Dashboard
+      </a>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

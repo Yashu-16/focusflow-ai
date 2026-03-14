@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "AI Life Efficiency Assistant",
+  "version": "1.0.0",
+  "description": "Your personal AI productivity assistant inside the browser",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "alarms",
+    "notifications",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://*/*",
+    "http://localhost:8000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["contentScript.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://nytimes.com/*",
+        "https://www.nytimes.com/*",
+        "https://bbc.com/*",
+        "https://www.bbc.com/*",
+        "https://techcrunch.com/*",
+        "https://www.techcrunch.com/*",
+        "https://reuters.com/*",
+        "https://www.reuters.com/*"
+      ],
+      "js": ["newsScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Life Efficiency",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
