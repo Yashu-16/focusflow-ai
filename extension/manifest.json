@@ -38,6 +38,11 @@
       ],
       "js": ["newsScript.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["progressOverlay.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
