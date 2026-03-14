@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import { sendCommand, getUserId } from '@/lib/api'
+import { previewCommand, cancelTask, openTaskStream } from '@/lib/api'
+import SafetyPanel, { SafetyState, TaskPreview, ProgressEvent } from './SafetyPanel'
 
 interface Message {
   id: string
@@ -32,12 +33,26 @@ export default function AIChatPanel() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // ── Safety layer state ────────────────────────────────────────────────────
+  const [safetyState, setSafetyState] = useState<SafetyState>('idle')
+  const [pendingTask, setPendingTask] = useState<TaskPreview | null>(null)
+  const [progress, setProgress] = useState<ProgressEvent | null>(null)
+  const activeStreamRef = useRef<EventSource | null>(null)
+  const activeTaskIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Cleanup SSE on unmount
+  useEffect(() => {
+    return () => { activeStreamRef.current?.close() }
+  }, [])
+
+  // ── Step 1: classify command → show confirmation modal ───────────────────
   const send = async (text: string) => {
     if (!text.trim() || loading) return
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -49,25 +64,105 @@ export default function AIChatPanel() {
     setLoading(true)
 
     try {
-      const data = await sendCommand(text)
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        content: data.result || 'No response received.',
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, aiMsg])
-    } catch (e: any) {
-      const errMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        content: '⚠️ Could not connect to backend. Make sure the backend server is running on port 8000.',
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, errMsg])
+      const preview = await previewCommand(text)
+      setPendingTask(preview)
+      setSafetyState('confirming')
+    } catch {
+      addAiMessage('⚠️ Could not connect to backend. Make sure the backend server is running on port 8000.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── Step 2: user confirmed → open SSE stream ─────────────────────────────
+  const handleConfirm = () => {
+    if (!pendingTask) return
+    setSafetyState('executing')
+    setProgress({ percent: 0, message: 'Starting...' })
+
+    const taskId = pendingTask.task_id
+    activeTaskIdRef.current = taskId
+    const stream = openTaskStream(taskId)
+    activeStreamRef.current = stream
+
+    stream.onmessage = (e) => {
+      const event: ProgressEvent = JSON.parse(e.data)
+
+      if (event.cancelled) {
+        stream.close()
+        activeStreamRef.current = null
+        setSafetyState('stopped')
+        setTimeout(() => setSafetyState('idle'), 2500)
+        return
+      }
+
+      if (event.error) {
+        stream.close()
+        activeStreamRef.current = null
+        setSafetyState('idle')
+        addAiMessage(`⚠️ Task error: ${event.error}`)
+        return
+      }
+
+      // Progress update
+      setProgress(event)
+
+      // Final event: result is included
+      if (event.result) {
+        stream.close()
+        activeStreamRef.current = null
+        setSafetyState('idle')
+        setPendingTask(null)
+        setProgress(null)
+        addAiMessage(event.result)
+      }
+    }
+
+    stream.onerror = () => {
+      stream.close()
+      activeStreamRef.current = null
+      setSafetyState('idle')
+      addAiMessage('⚠️ Lost connection to backend during task execution.')
+    }
+  }
+
+  // ── Step 3a: user cancelled before confirming ────────────────────────────
+  const handleDismiss = () => {
+    if (pendingTask) {
+      // Discard the pending task server-side too
+      cancelTask(pendingTask.task_id).catch(() => {})
+    }
+    setSafetyState('idle')
+    setPendingTask(null)
+    setProgress(null)
+    addAiMessage('ℹ️ Task cancelled before execution.')
+  }
+
+  // ── Step 3b: emergency stop during execution ──────────────────────────────
+  const handleStop = () => {
+    const taskId = activeTaskIdRef.current
+    if (taskId) {
+      cancelTask(taskId).catch(() => {})
+      activeTaskIdRef.current = null
+    }
+    activeStreamRef.current?.close()
+    activeStreamRef.current = null
+    setSafetyState('stopped')
+    setTimeout(() => {
+      setSafetyState('idle')
+      setPendingTask(null)
+      setProgress(null)
+    }, 2500)
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const addAiMessage = (content: string) => {
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'ai',
+      content,
+      timestamp: new Date(),
+    }])
   }
 
   const handleKey = (e: React.KeyboardEvent) => {
@@ -81,10 +176,12 @@ export default function AIChatPanel() {
     setMessages([{
       id: '0',
       role: 'ai',
-      content: `Chat cleared. How can I help you?`,
+      content: 'Chat cleared. How can I help you?',
       timestamp: new Date(),
     }])
   }
+
+  const isBlocked = loading || safetyState !== 'idle'
 
   return (
     <div style={{
@@ -166,7 +263,7 @@ export default function AIChatPanel() {
 
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 4 }}>AI Assistant is thinking...</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 4 }}>Analyzing request...</div>
             <div className="chat-message-ai" style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '12px 16px' }}>
               {[0, 1, 2].map(i => (
                 <div key={i} style={{
@@ -183,6 +280,16 @@ export default function AIChatPanel() {
         <div ref={bottomRef} />
       </div>
 
+      {/* ── Safety Panel (sits above the quick prompts) ── */}
+      <SafetyPanel
+        state={safetyState}
+        task={pendingTask}
+        progress={progress}
+        onConfirm={handleConfirm}
+        onDismiss={handleDismiss}
+        onStop={handleStop}
+      />
+
       {/* Quick prompts */}
       <div style={{
         padding: '10px 12px',
@@ -196,7 +303,7 @@ export default function AIChatPanel() {
           <button
             key={p.label}
             onClick={() => send(p.cmd)}
-            disabled={loading}
+            disabled={isBlocked}
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border)',
@@ -204,13 +311,13 @@ export default function AIChatPanel() {
               color: 'var(--text-secondary)',
               padding: '4px 10px',
               fontSize: 11,
-              cursor: loading ? 'not-allowed' : 'pointer',
+              cursor: isBlocked ? 'not-allowed' : 'pointer',
               whiteSpace: 'nowrap',
               transition: 'all 0.15s',
-              opacity: loading ? 0.5 : 1,
+              opacity: isBlocked ? 0.5 : 1,
             }}
             onMouseEnter={e => {
-              if (!loading) {
+              if (!isBlocked) {
                 (e.target as HTMLElement).style.borderColor = 'var(--accent)'
                 ;(e.target as HTMLElement).style.color = 'var(--text-primary)'
               }
@@ -246,8 +353,8 @@ export default function AIChatPanel() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Ask anything..."
-            disabled={loading}
+            placeholder={isBlocked ? 'Waiting for task to complete...' : 'Ask anything...'}
+            disabled={isBlocked}
             style={{
               flex: 1,
               background: 'none',
@@ -259,14 +366,14 @@ export default function AIChatPanel() {
           />
           <button
             onClick={() => send(input)}
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || isBlocked}
             style={{
               width: 32, height: 32,
-              background: input.trim() && !loading ? 'var(--accent)' : 'var(--bg-elevated)',
+              background: input.trim() && !isBlocked ? 'var(--accent)' : 'var(--bg-elevated)',
               border: 'none',
               borderRadius: 8,
               color: 'white',
-              cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
+              cursor: input.trim() && !isBlocked ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

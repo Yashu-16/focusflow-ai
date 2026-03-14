@@ -26,6 +26,35 @@ export async function sendCommand(command: string) {
   return res.data
 }
 
+/**
+ * Classify a command without executing it.
+ * Returns { task_id, intent, description, steps } for the confirmation modal.
+ */
+export async function previewCommand(command: string) {
+  const res = await api.post('/api/command/preview', {
+    user_id: getUserId(),
+    command,
+  })
+  return res.data as { task_id: string; intent: string; description: string; steps: number }
+}
+
+/**
+ * Signal the backend to stop an executing task.
+ */
+export async function cancelTask(taskId: string) {
+  const res = await api.post(`/api/command/cancel/${taskId}`)
+  return res.data
+}
+
+/**
+ * Open an SSE connection for a confirmed task.
+ * Returns an EventSource. Caller is responsible for closing it.
+ */
+export function openTaskStream(taskId: string): EventSource {
+  const url = `${API_BASE}/api/command/stream/${taskId}?user_id=${getUserId()}`
+  return new EventSource(url)
+}
+
 export async function getWeeklyReport() {
   const res = await api.get(`/api/report/weekly?user_id=${getUserId()}`)
   return res.data
