@@ -168,6 +168,17 @@ Full interactive docs: http://localhost:8000/docs
 
 ---
 
+## 🛡️ Safety & Transparency
+Full control and visibility over AI-driven automation.
+
+**Guardrail Confirmation** — The extension triggers a mandatory confirmation pop-up before executing any high-stakes automation, allowing you to review the AI's intent.
+
+**Glassbox Progress Tracking** — Real-time visual feedback on the side panel. Watch the AI work through steps (e.g., "Reading page content," "Drafting reply") with a live completeness percentage.
+
+**Emergency Kill Switch** — A global "Stop" button available in both the Dashboard and Extension to instantly terminate all active AI commands and backend processes.
+
+---
+
 ## ❓ Troubleshooting
 
 **"Python not found"** → Reinstall Python with "Add to PATH" checked
