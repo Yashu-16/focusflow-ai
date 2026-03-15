@@ -3,637 +3,655 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AI Life Efficiency</title>
+<title>AI Life Efficiency Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#080b11;--card:#111621;--elevated:#18202e;--border:#1d2840;--border2:#243350;
-  --accent:#6366f1;--accent2:#8b5cf6;--glow:rgba(99,102,241,0.12);
-  --text:#f0f4ff;--sub:#8892aa;--muted:#4a5570;
-  --green:#34d399;--amber:#fbbf24;--cyan:#22d3ee;--pink:#f472b6;--red:#f87171;
-}
-html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.5}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#243350;border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#334466}
-
-/* Layout */
-.app{display:flex;height:100vh}
-.sidebar{width:56px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:2px;flex-shrink:0}
-.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:16px;box-shadow:0 0 16px rgba(99,102,241,0.3)}
-.nav{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;border:1px solid transparent;background:transparent;transition:all .15s;position:relative;user-select:none}
-.nav:hover{background:var(--elevated)}
-.nav.on{background:var(--glow);border-color:rgba(99,102,241,.25)}
-.nav.on::before{content:'';position:absolute;left:-1px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0}
-.nav-tip{position:absolute;left:54px;background:#1e2840;border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100}
-.nav:hover .nav-tip{opacity:1}
-
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.topbar{height:50px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--card);flex-shrink:0}
-.topbar-brand{font-size:13px;font-weight:600;letter-spacing:.01em}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.pill{background:var(--elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;display:flex;align-items:center;gap:5px;font-weight:500}
-.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
-
-.body{flex:1;display:flex;overflow:hidden}
-.pages{flex:1;overflow-y:auto;padding:22px 20px;min-width:0}
-.page{display:none;flex-direction:column;gap:18px;animation:fadeUp .25s ease}
-.page.on{display:flex}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* Cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color .2s}
-.card:hover{border-color:var(--border2)}
-.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:14px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g21{display:grid;grid-template-columns:1fr 200px;gap:12px}
-.stat-n{font-size:30px;font-weight:700;line-height:1;margin:8px 0 4px}
-.stat-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.stat-s{font-size:11px;color:var(--muted);margin-top:2px}
-.page-h h1{font-size:21px;font-weight:700}
-.page-h p{font-size:12px;color:var(--muted);margin-top:3px}
-
-/* Table rows */
-.row{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg);border-radius:9px;border:1px solid var(--border);transition:border-color .15s}
-.row:hover{border-color:var(--border2)}
-.badge{background:var(--glow);border:1px solid rgba(99,102,241,.25);border-radius:7px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--accent)}
-.tag{background:var(--elevated);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted)}
-
-/* Email */
-.erow{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--border);cursor:default;transition:background .12s}
-.erow:last-child{border-bottom:none}
-.erow:hover{background:var(--elevated)}
-.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
-.udot{width:7px;height:7px;background:var(--accent);border-radius:50%;flex-shrink:0}
-
-/* News */
-.ncard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s}
-.ncard:hover{background:var(--elevated);border-color:var(--border2)}
-
-/* Chat */
-.chat{width:330px;flex-shrink:0;border-left:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;height:100%}
-.chat-hd{padding:13px 14px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.chat-av{width:30px;height:30px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.chat-name{font-size:12px;font-weight:600}
-.chat-status{font-size:10px;color:var(--green);display:flex;align-items:center;gap:3px;margin-top:1px}
-.clr{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:3px 8px;font-size:10px;cursor:pointer;transition:all .15s}
-.clr:hover{border-color:var(--accent);color:var(--text)}
-.msgs{flex:1;overflow-y:auto;padding:13px 11px;display:flex;flex-direction:column;gap:10px}
-.m{display:flex;flex-direction:column}
-.m.u{align-items:flex-end}
-.m.a{align-items:flex-start}
-.m-meta{font-size:9px;color:var(--muted);margin-bottom:3px;padding:0 3px}
-.b{padding:9px 12px;font-size:12px;line-height:1.55;max-width:90%;word-break:break-word;white-space:pre-wrap}
-.b.u{background:var(--accent);color:#fff;border-radius:14px 14px 3px 14px}
-.b.a{background:var(--elevated);border:1px solid var(--border);color:var(--text);border-radius:14px 14px 14px 3px}
-@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.m{animation:msgIn .18s ease}
-.chips{padding:8px 10px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0}
-.chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:10px;color:var(--sub);cursor:pointer;transition:all .15s;white-space:nowrap}
-.chip:hover{border-color:var(--accent);color:var(--text)}
-.chat-inp{padding:9px 11px 13px;border-top:1px solid var(--border);flex-shrink:0}
-.inp-wrap{display:flex;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:6px 6px 6px 11px;align-items:center;transition:border-color .15s}
-.inp-wrap:focus-within{border-color:var(--accent)}
-.inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:inherit}
-.inp::placeholder{color:var(--muted)}
-.send{width:30px;height:30px;background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
-.send:hover{background:#4f46e5}
-.send:disabled{background:var(--elevated);cursor:not-allowed}
-.inp-hint{font-size:9px;color:var(--muted);text-align:center;margin-top:5px}
-
-/* Typing */
-.typing{display:flex;gap:4px;align-items:center;padding:8px 12px}
-.typing span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:bounce .9s ease infinite}
-.typing span:nth-child(2){animation-delay:.15s}
-.typing span:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-
-/* Efficiency ring */
-.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.ring-label{position:absolute;text-align:center}
-.ring-label .big{font-size:26px;font-weight:800;color:var(--accent)}
-.ring-label .small{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-
-/* Settings */
-.setting-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
-.setting-inp:focus{border-color:var(--accent)}
-.btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:9px;padding:10px 22px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit}
-.btn-primary:hover{opacity:.9}
-.setup-step{display:flex;gap:12px;align-items:flex-start}
-.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px}
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+ 
+  :root {
+    --bg: #0a0d14; --card: #161b27; --elevated: #1e2535;
+    --border: #1e2a3a; --accent: #6366f1; --accent-glow: rgba(99,102,241,0.15);
+    --text: #f1f5f9; --muted: #64748b; --sub: #94a3b8;
+    --green: #4ade80; --amber: #fbbf24; --cyan: #22d3ee; --pink: #f472b6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100vh; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; }
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+ 
+  /* Layout */
+  .app { display: flex; height: 100vh; }
+  .sidebar { width: 58px; background: var(--card); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px; flex-shrink: 0; }
+  .logo { width: 36px; height: 36px; background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 14px; }
+  .nav-btn { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px; cursor: pointer; border: 1px solid transparent;
+    background: transparent; transition: all .15s; position: relative; }
+  .nav-btn:hover { background: var(--elevated); }
+  .nav-btn.active { background: var(--accent-glow); border-color: rgba(99,102,241,.3); }
+  .nav-btn.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+    width:3px; height:20px; background:var(--accent); border-radius:0 2px 2px 0; }
+ 
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: space-between; padding: 0 20px; background: #0f1117; flex-shrink: 0; }
+  .topbar-title { font-size: 13px; font-weight: 600; }
+  .status-pill { background: var(--elevated); border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block; }
+ 
+  .content-row { flex: 1; display: flex; overflow: hidden; }
+  .page-area { flex: 1; overflow-y: auto; padding: 20px; }
+  .page { display: none; flex-direction: column; gap: 18px; }
+  .page.active { display: flex; }
+ 
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--accent); margin-bottom: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-val { font-size: 28px; font-weight: 700; margin: 6px 0 4px; }
+  .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+ 
+  /* Chat panel */
+  .chat-panel { width: 340px; flex-shrink: 0; border-left: 1px solid var(--border);
+    background: var(--card); display: flex; flex-direction: column; height: 100%; }
+  .chat-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; }
+  .chat-avatar { width: 32px; height: 32px; background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .chat-name { font-size: 13px; font-weight: 600; }
+  .chat-online { font-size: 10px; color: var(--green); display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+  .clear-btn { background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--muted); padding: 4px 8px; font-size: 11px; cursor: pointer; }
+  .clear-btn:hover { border-color: var(--accent); color: var(--text); }
+ 
+  .messages { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; flex-direction: column; }
+  .msg.user { align-items: flex-end; }
+  .msg.ai { align-items: flex-start; }
+  .msg-meta { font-size: 10px; color: var(--muted); margin-bottom: 3px; padding: 0 4px; }
+  .bubble { padding: 10px 13px; font-size: 13px; line-height: 1.6; max-width: 88%; word-break: break-word; white-space: pre-wrap; }
+  .bubble.user { background: var(--accent); color: #fff; border-radius: 16px 16px 4px 16px; }
+  .bubble.ai { background: var(--elevated); border: 1px solid var(--border); color: var(--text); border-radius: 16px 16px 16px 4px; }
+ 
+  .quick-chips { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 5px; flex-wrap: wrap; }
+  .chip { background: #0f1117; border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 9px; font-size: 11px; color: var(--sub); cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip:disabled { opacity: .4; cursor: not-allowed; }
+ 
+  .chat-input-area { padding: 10px 12px 14px; border-top: 1px solid var(--border); }
+  .input-row { display: flex; gap: 8px; background: #0f1117; border: 1px solid var(--border);
+    border-radius: 12px; padding: 6px 6px 6px 12px; align-items: center; }
+  .input-row:focus-within { border-color: var(--accent); }
+  .chat-input { flex: 1; background: none; border: none; outline: none; color: var(--text);
+    font-size: 13px; font-family: inherit; }
+  .chat-input::placeholder { color: var(--muted); }
+  .send-btn { width: 32px; height: 32px; background: var(--accent); border: none; border-radius: 8px;
+    color: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center;
+    justify-content: center; transition: background .15s; flex-shrink: 0; }
+  .send-btn:hover { background: #4f46e5; }
+  .send-btn:disabled { background: var(--elevated); cursor: not-allowed; }
+  .input-hint { font-size: 10px; color: var(--muted); text-align: center; margin-top: 5px; }
+ 
+  /* Typing indicator */
+  .typing { display: flex; gap: 5px; align-items: center; padding: 10px 14px; }
+  .typing span { width: 7px; height: 7px; background: var(--accent); border-radius: 50%;
+    animation: bounce .9s ease infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .msg { animation: fadeIn .2s ease; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .spinner { width:13px; height:13px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff;
+    border-radius:50%; animation:spin .7s linear infinite; }
+ 
+  /* Page content styles */
+  .page-header h1 { font-size: 22px; font-weight: 700; }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .session-row { display:flex; align-items:center; justify-content:space-between;
+    padding:10px 13px; background:#0f1117; border-radius:8px; border:1px solid var(--border); }
+  .badge { background:var(--accent-glow); border:1px solid rgba(99,102,241,.3);
+    border-radius:6px; padding:3px 9px; font-size:12px; font-weight:600; color:var(--accent); }
+  .email-row { display:flex; align-items:center; gap:12px; padding:12px 16px;
+    border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+  .email-row:hover { background:var(--elevated); }
+  .email-row:last-child { border-bottom:none; }
+  .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700;
+    color:#fff; flex-shrink:0; }
+  .unread-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0; }
+  .news-card { background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:14px 16px; cursor:pointer; transition:all .15s; }
+  .news-card:hover { background:var(--elevated); border-color:#2d3a50; }
+  .source-tag { background:#0f1117; border:1px solid var(--border); border-radius:20px;
+    padding:2px 8px; font-size:10px; color:var(--muted); }
 </style>
 </head>
 <body>
 <div class="app">
-
-<!-- Sidebar -->
-<div class="sidebar">
-  <div class="logo-mark">⚡</div>
-  <div class="nav on" id="nav-dashboard" onclick="go('dashboard',this)">🏠<span class="nav-tip">Dashboard</span></div>
-  <div class="nav" id="nav-focus" onclick="go('focus',this)">🎯<span class="nav-tip">Focus</span></div>
-  <div class="nav" id="nav-activity" onclick="go('activity',this)">📋<span class="nav-tip">Activity</span></div>
-  <div class="nav" id="nav-emails" onclick="go('emails',this)">📧<span class="nav-tip">Emails</span></div>
-  <div class="nav" id="nav-news" onclick="go('news',this)">📰<span class="nav-tip">News</span></div>
-  <div class="nav" id="nav-reports" onclick="go('reports',this)">📊<span class="nav-tip">Reports</span></div>
-  <div class="nav" id="nav-settings" onclick="go('settings',this)">⚙️<span class="nav-tip">Settings</span></div>
-</div>
-
-<!-- Main -->
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-brand">⚡ AI Life Efficiency</div>
-    <div class="topbar-right">
-      <span id="topdate" style="font-size:11px;color:var(--muted)"></span>
-      <div class="pill" id="bstatus"><span class="dot" style="background:var(--amber)"></span><span id="btext">Connecting...</span></div>
+ 
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">⚡</div>
+    <div class="nav-btn active" onclick="showPage('dashboard',this)" title="Dashboard">🏠</div>
+    <div class="nav-btn" onclick="showPage('focus',this)" title="Focus">🎯</div>
+    <div class="nav-btn" onclick="showPage('activity',this)" title="Activity">📋</div>
+    <div class="nav-btn" onclick="showPage('emails',this)" title="Emails">📧</div>
+    <div class="nav-btn" onclick="showPage('news',this)" title="News">📰</div>
+    <div class="nav-btn" onclick="showPage('reports',this)" title="Reports">📊</div>
+    <div class="nav-btn" onclick="showPage('settings',this)" title="Settings">⚙️</div>
+  </div>
+ 
+  <!-- Main area -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">AI Life Efficiency Dashboard</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:12px;color:var(--muted)" id="topbar-date"></span>
+        <div class="status-pill" id="backend-status">
+          <span class="dot" style="background:var(--amber)"></span>
+          <span id="status-text">Checking backend...</span>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="content-row">
+      <div class="page-area">
+ 
+        <!-- DASHBOARD PAGE -->
+        <div class="page active" id="page-dashboard">
+          <div class="page-header">
+            <h1 id="greeting">Good day, Productivity Pro 👋</h1>
+            <p id="dashboard-sub">Loading your stats...</p>
+          </div>
+          <div class="grid-4">
+            <div class="card"><div class="stat-lbl">Focus Time</div><div class="stat-val" style="color:var(--accent)" id="s-focus">—</div><div class="stat-sub">This week</div></div>
+            <div class="card"><div class="stat-lbl">Routine Time</div><div class="stat-val" style="color:var(--cyan)" id="s-routine">—</div><div class="stat-sub">Emails + News</div></div>
+            <div class="card"><div class="stat-lbl">Efficiency</div><div class="stat-val" style="color:var(--green)" id="s-eff">—</div><div class="stat-sub">Focus / Total</div></div>
+            <div class="card"><div class="stat-lbl">Sessions</div><div class="stat-val" style="color:var(--amber)" id="s-sessions">—</div><div class="stat-sub">This week</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-title">Weekly Focus Hours</div><canvas id="focusChart" height="130"></canvas></div>
+            <div class="card"><div class="card-title">Time Split</div><canvas id="splitChart" height="130"></canvas></div>
+          </div>
+          <div class="card" id="today-sessions-card" style="display:none">
+            <div class="card-title">Today's Sessions</div>
+            <div id="today-sessions" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+ 
+        <!-- FOCUS PAGE -->
+        <div class="page" id="page-focus">
+          <div class="page-header"><h1>Focus Sessions 🎯</h1><p>Your deep work history</p></div>
+          <div class="grid-2">
+            <div class="card"><div class="stat-lbl">Today's Focus</div><div class="stat-val" style="color:var(--accent)" id="f-today">—</div></div>
+            <div class="card"><div class="stat-lbl">Total Sessions</div><div class="stat-val" style="color:var(--green)" id="f-total">—</div></div>
+          </div>
+          <div class="card"><div class="card-title">Session History</div><div id="focus-list" style="display:flex;flex-direction:column;gap:8px"></div></div>
+        </div>
+ 
+        <!-- ACTIVITY PAGE -->
+        <div class="page" id="page-activity">
+          <div class="page-header"><h1>Activity Log 📋</h1><p>Browser activity captured by the extension</p></div>
+          <div class="grid-4" id="activity-stats"></div>
+          <div class="card"><div class="card-title">Recent Activity</div><div id="activity-list" style="display:flex;flex-direction:column;gap:6px"></div></div>
+        </div>
+ 
+        <!-- EMAILS PAGE -->
+        <div class="page" id="page-emails">
+          <div class="page-header"><h1>Emails 📧</h1><p>Captured from Gmail via the extension</p></div>
+          <div class="card" style="padding:0;overflow:hidden"><div id="email-list"></div></div>
+          <p style="font-size:11px;color:var(--muted);text-align:center">💡 Open Gmail with the extension installed to auto-capture emails</p>
+        </div>
+ 
+        <!-- NEWS PAGE -->
+        <div class="page" id="page-news">
+          <div class="page-header"><h1>News Feed 📰</h1><p>Headlines captured from news sites</p></div>
+          <div id="news-list" style="display:flex;flex-direction:column;gap:10px"></div>
+          <p style="font-size:11px;color:var(--muted);text-align:center">💡 Visit news sites with the extension to auto-capture headlines</p>
+        </div>
+ 
+        <!-- REPORTS PAGE -->
+        <!-- REPORTS PAGE -->
+      <!-- REPORTS PAGE -->
+        <div class="page" id="page-reports">
+          <div class="page-header"><h1>Weekly Report 📊</h1><p>Your productivity summary</p></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+            <div class="card"><div class="stat-lbl">Focus</div><div class="stat-val" style="color:var(--accent)" id="r-focus">—</div></div>
+            <div class="card"><div class="stat-lbl">Routine</div><div class="stat-val" style="color:var(--cyan)" id="r-routine">—</div></div>
+            <div class="card"><div class="stat-lbl">Efficiency</div><div class="stat-val" style="color:var(--green)" id="r-eff">—</div></div>
+            <div class="card"><div class="stat-lbl">Sessions</div><div class="stat-val" style="color:var(--amber)" id="r-sessions">—</div></div>
+            <div class="card"><div class="stat-lbl">Emails</div><div class="stat-val" style="color:var(--pink)" id="r-emails">—</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <div class="card" style="text-align:center;padding:20px">
+              <div style="font-size:28px;margin-bottom:8px">🧠</div>
+              <div class="stat-val" style="color:var(--green)" id="r-cog-saved">—</div>
+              <div class="stat-lbl">Cognitive Hrs Saved</div>
+              <div class="stat-sub">vs no AI assistant</div>
+            </div>
+            <div class="card" style="text-align:center;padding:20px">
+              <div style="font-size:28px;margin-bottom:8px">⚡</div>
+              <div class="stat-val" style="color:var(--accent)" id="r-longest">—</div>
+              <div class="stat-lbl">Longest Focus Session</div>
+              <div id="r-best-day" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <div class="card" style="text-align:center;padding:20px">
+              <div style="font-size:28px;margin-bottom:8px">📉</div>
+              <div class="stat-val" style="color:var(--cyan)" id="r-waw">—</div>
+              <div class="stat-lbl">Work About Work</div>
+              <div class="stat-sub">industry avg: 60%</div>
+            </div>
+          </div>
+          <div class="card"><div class="card-title">Daily Focus Breakdown</div><canvas id="reportChart" height="140"></canvas></div>
+        </div>
+ 
+        <!-- SETTINGS PAGE -->
+        <div class="page" id="page-settings">
+          <div class="page-header"><h1>Settings ⚙️</h1><p>Configure your assistant</p></div>
+          <div class="card">
+            <div class="card-title">Backend URL</div>
+            <input id="backend-url-input" value="http://localhost:8000" style="width:100%;background:#0f1117;border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px"/>
+            <button onclick="saveSettings()" style="background:var(--accent);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save &amp; Reconnect</button>
+          </div>
+          <div class="card">
+            <div class="card-title">🚀 Setup Guide</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:12px;align-items:flex-start" v-for="s in steps">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">1</div>
+                <div><div style="font-size:13px;font-weight:500">Start the backend</div><div style="font-size:12px;color:var(--muted)">Double-click start-backend.bat in the project folder</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">2</div>
+                <div><div style="font-size:13px;font-weight:500">Add API key (optional)</div><div style="font-size:12px;color:var(--muted)">Edit backend/.env → add ANTHROPIC_API_KEY or OPENAI_API_KEY</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">3</div>
+                <div><div style="font-size:13px;font-weight:500">Install extension</div><div style="font-size:12px;color:var(--muted)">chrome://extensions → Developer Mode → Load Unpacked → extension/ folder</div></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">4</div>
+                <div><div style="font-size:13px;font-weight:500">Open this file in Chrome</div><div style="font-size:12px;color:var(--muted)">Just double-click dashboard-standalone.html — no Node.js needed!</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+      </div><!-- /page-area -->
+ 
+      <!-- AI Chat Panel -->
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="chat-avatar">⚡</div>
+            <div>
+              <div class="chat-name">AI Assistant</div>
+              <div class="chat-online"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block"></span>Online</div>
+            </div>
+          </div>
+          <button class="clear-btn" onclick="clearChat()">Clear</button>
+        </div>
+ 
+        <div class="messages" id="messages"></div>
+ 
+        <div class="quick-chips">
+          <span class="chip" onclick="sendChat('Summarize my unread emails')">📧 Emails</span>
+          <span class="chip" onclick="sendChat('Give me today\'s news digest')">📰 News</span>
+          <span class="chip" onclick="sendChat('What is my productivity score this week?')">📊 Report</span>
+          <span class="chip" onclick="sendChat('Give me 5 focus improvement tips')">💡 Tips</span>
+          <span class="chip" onclick="sendChat('Help me plan my tasks for today')">🎯 Plan</span>
+          <span class="chip" onclick="sendChat('Draft a professional email reply')">✍️ Reply</span>
+        </div>
+ 
+        <div class="chat-input-area">
+          <div class="input-row">
+            <input class="chat-input" id="chat-input" placeholder="Ask anything..." onkeydown="handleKey(event)"/>
+            <button class="send-btn" id="send-btn" onclick="sendFromInput()">↑</button>
+          </div>
+          <div class="input-hint">Enter to send</div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="body">
-    <div class="pages">
-
-      <!-- DASHBOARD -->
-      <div class="page on" id="page-dashboard">
-        <div class="page-h"><h1 id="greet">Good day 👋</h1><p id="dsub">Loading your productivity data...</p></div>
-        <div class="g4" id="kpis"></div>
-        <div class="g21">
-          <div class="card"><div class="card-title">Weekly Focus Hours</div><canvas id="barChart" height="130"></canvas></div>
-          <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-            <div class="card-title" style="margin-bottom:0">Efficiency</div>
-            <div class="ring-wrap">
-              <canvas id="ringChart" width="130" height="130"></canvas>
-              <div class="ring-label"><div class="big" id="ringVal">—</div><div class="small">score</div></div>
-            </div>
-            <div id="ring-msg" style="font-size:11px;color:var(--muted);text-align:center"></div>
-          </div>
-        </div>
-        <div class="card" id="sess-card" style="display:none">
-          <div class="card-title">Today's Sessions</div>
-          <div id="sess-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        </div>
-      </div>
-
-      <!-- FOCUS -->
-      <div class="page" id="page-focus">
-        <div class="page-h"><h1>Focus Sessions 🎯</h1><p>Your deep work history and stats</p></div>
-        <div class="g3">
-          <div class="card"><div class="stat-l">Today</div><div class="stat-n" style="color:var(--accent)" id="f-today">—</div><div class="stat-s">hours focused</div></div>
-          <div class="card"><div class="stat-l">This Week</div><div class="stat-n" style="color:var(--cyan)" id="f-week">—</div><div class="stat-s">total sessions</div></div>
-          <div class="card"><div class="stat-l">Longest</div><div class="stat-n" style="color:var(--green)" id="f-best">—</div><div class="stat-s">single session</div></div>
-        </div>
-        <div class="card"><div class="card-title">Session History</div><div id="focus-list" style="display:flex;flex-direction:column;gap:7px"></div></div>
-      </div>
-
-      <!-- ACTIVITY -->
-      <div class="page" id="page-activity">
-        <div class="page-h"><h1>Activity Log 📋</h1><p>Browser activity captured by the extension</p></div>
-        <div class="g4" id="act-kpis"></div>
-        <div class="card"><div class="card-title">Recent Activity</div><div id="act-list" style="display:flex;flex-direction:column;gap:6px"></div></div>
-      </div>
-
-      <!-- EMAILS -->
-      <div class="page" id="page-emails">
-        <div class="page-h" style="display:flex;justify-content:space-between;align-items:flex-end">
-          <div><h1>Emails 📧</h1><p>Captured from Gmail via the browser extension</p></div>
-          <div class="pill" id="unread-badge" style="display:none;color:var(--accent);border-color:rgba(99,102,241,.3);background:var(--glow)"></div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden"><div id="email-list"></div></div>
-        <p style="font-size:11px;color:var(--muted);text-align:center">💡 Open Gmail with the extension installed to auto-capture emails</p>
-      </div>
-
-      <!-- NEWS -->
-      <div class="page" id="page-news">
-        <div class="page-h"><h1>News Feed 📰</h1><p>Headlines captured from news sites via the extension</p></div>
-        <div id="news-list" style="display:flex;flex-direction:column;gap:10px"></div>
-        <p style="font-size:11px;color:var(--muted);text-align:center">💡 Visit news sites with the extension installed to auto-capture headlines</p>
-      </div>
-
-      <!-- REPORTS -->
-      <div class="page" id="page-reports">
-        <div class="page-h"><h1>Weekly Report 📊</h1><p>Full productivity breakdown for this week</p></div>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="rep-kpis"></div>
-        <div class="card"><div class="card-title">Daily Focus Breakdown</div><canvas id="repChart" height="140"></canvas></div>
-        <div class="card" id="cmd-hist-card" style="display:none">
-          <div class="card-title">Recent AI Commands</div>
-          <div id="cmd-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        </div>
-      </div>
-
-      <!-- SETTINGS -->
-      <div class="page" id="page-settings">
-        <div class="page-h"><h1>Settings ⚙️</h1><p>Configure your AI assistant</p></div>
-        <div class="card">
-          <div class="card-title">Backend Connection</div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:7px">Backend URL</label>
-          <input class="setting-inp" id="bu-input" value="http://localhost:8000" style="margin-bottom:10px"/>
-          <button class="btn-primary" onclick="saveSettings()" id="save-btn">Save &amp; Reconnect</button>
-          <div id="save-msg" style="font-size:11px;color:var(--green);margin-top:8px;display:none">✅ Saved!</div>
-        </div>
-        <div class="card">
-          <div class="card-title">AI Provider (set in backend/.env)</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px">
-              <div style="font-size:12px;font-weight:600;margin-bottom:3px">Anthropic Claude (recommended)</div>
-              <div style="font-size:11px;color:var(--muted)">Add ANTHROPIC_API_KEY in backend/.env — get key at console.anthropic.com</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px">
-              <div style="font-size:12px;font-weight:600;margin-bottom:3px">OpenAI GPT</div>
-              <div style="font-size:11px;color:var(--muted)">Add OPENAI_API_KEY in backend/.env — get key at platform.openai.com</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Quick Setup Guide</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div class="setup-step"><div class="step-num">1</div><div><div style="font-size:13px;font-weight:500">Start the backend</div><div style="font-size:11px;color:var(--muted)">Double-click start-backend.bat — wait for "Uvicorn running on port 8000"</div></div></div>
-            <div class="setup-step"><div class="step-num">2</div><div><div style="font-size:13px;font-weight:500">Open this dashboard</div><div style="font-size:11px;color:var(--muted)">Double-click dashboard-standalone.html directly in Chrome, or run start-dashboard.bat</div></div></div>
-            <div class="setup-step"><div class="step-num">3</div><div><div style="font-size:13px;font-weight:500">Add your API key (optional)</div><div style="font-size:11px;color:var(--muted)">Edit backend/.env → replace your_key_here with your real Anthropic or OpenAI key</div></div></div>
-            <div class="setup-step"><div class="step-num">4</div><div><div style="font-size:13px;font-weight:500">Install Chrome extension</div><div style="font-size:11px;color:var(--muted)">chrome://extensions → Developer Mode ON → Load Unpacked → select extension/ folder</div></div></div>
-            <div class="setup-step"><div class="step-num">5</div><div><div style="font-size:13px;font-weight:500">Browse and track</div><div style="font-size:11px;color:var(--muted)">Open Gmail, news sites — the extension captures data automatically</div></div></div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /pages -->
-
-    <!-- AI Chat Panel -->
-    <div class="chat">
-      <div class="chat-hd">
-        <div style="display:flex;align-items:center;gap:9px">
-          <div class="chat-av">⚡</div>
-          <div>
-            <div class="chat-name">AI Assistant</div>
-            <div class="chat-status"><span class="dot" style="background:var(--green)"></span>Ready</div>
-          </div>
-        </div>
-        <button class="clr" onclick="clearChat()">Clear</button>
-      </div>
-
-      <div class="msgs" id="msgs"></div>
-
-      <div class="chips">
-        <span class="chip" onclick="send('Summarize my unread emails')">📧 Emails</span>
-        <span class="chip" onclick="send('Give me today\'s top news summary')">📰 News</span>
-        <span class="chip" onclick="send('What is my productivity score this week?')">📊 Report</span>
-        <span class="chip" onclick="send('Give me 5 focus improvement tips')">💡 Tips</span>
-        <span class="chip" onclick="send('Help me plan my tasks for today')">🎯 Plan day</span>
-        <span class="chip" onclick="send('Draft a short professional email reply')">✍️ Draft reply</span>
-      </div>
-
-      <div class="chat-inp">
-        <div class="inp-wrap">
-          <input class="inp" id="inp" placeholder="Ask anything..." onkeydown="onKey(event)"/>
-          <button class="send" id="sendbtn" onclick="sendInp()">↑</button>
-        </div>
-        <div class="inp-hint">Enter to send · Shift+Enter for new line</div>
-      </div>
-    </div>
-  </div><!-- /body -->
-</div><!-- /main -->
-</div><!-- /app -->
-
+</div>
+ 
 <script>
-// ─── Config ───────────────────────────────────────────────────────────────────
-let API = localStorage.getItem('backend_url') || 'http://localhost:8000';
-let busy = false;
-let charts = {};
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
+const API = localStorage.getItem('backend_url') || 'http://localhost:8000';
+let chatBusy = false;
+let focusChart, splitChart, reportChart;
+ 
+// ── Init ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('bu-input').value = API;
-  document.getElementById('topdate').textContent =
+  document.getElementById('topbar-date').textContent =
     new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
-  const h = new Date().getHours();
-  document.getElementById('greet').textContent =
-    `Good ${h<12?'morning':h<17?'afternoon':'evening'}, Productivity Pro 👋`;
-
-  addMsg('ai', `👋 Hello! I'm your AI productivity assistant.\n\nI can help you:\n• Summarize your emails\n• Get a news digest\n• Analyze your productivity\n• Draft email replies\n• Plan your day\n• Answer any question\n\nUse the quick buttons below or type anything!`);
-
-  checkBackend().then(() => {
-    loadDashboard();
-    loadFocus();
-    loadEmails();
-    loadNews();
-    loadActivity();
-    loadReports();
-  });
+  setGreeting();
+  addMessage('ai', `👋 Hello! I'm your AI productivity assistant.\n\nI can help you:\n• Summarize your emails\n• Get today's news digest\n• Analyze your productivity\n• Generate email replies\n• Plan your day\n\nTry a quick command below or type anything!`);
+  checkBackend();
+  loadDashboard();
+  loadFocus();
+  loadEmails();
+  loadNews();
+  loadActivity();
 });
-
-// ─── Backend check ────────────────────────────────────────────────────────────
+ 
+function getUserId() {
+  let uid = localStorage.getItem('ai_uid');
+  if (!uid) { uid = 'user_' + Math.random().toString(36).substr(2,9); localStorage.setItem('ai_uid', uid); }
+  return uid;
+}
+ 
+// ── Backend check ─────────────────────────────────────────
 async function checkBackend() {
   try {
-    const r = await fetch(API + '/health', {signal: AbortSignal.timeout(4000)});
+    const r = await fetch(API + '/health', { signal: AbortSignal.timeout(3000) });
     if (r.ok) {
-      setStatus(true);
-      document.getElementById('dsub').textContent = "Here's your live productivity overview";
-      return true;
-    }
-  } catch {}
-  setStatus(false);
-  document.getElementById('dsub').textContent = '⚠️ Demo mode — run start-backend.bat for live data';
-  return false;
+      document.getElementById('backend-status').innerHTML =
+        '<span class="dot"></span><span>Backend Online</span>';
+      document.getElementById('dashboard-sub').textContent = "Here's your live productivity overview";
+    } else { throw new Error(); }
+  } catch {
+    document.getElementById('backend-status').innerHTML =
+      '<span class="dot" style="background:var(--amber)"></span><span id="status-text">Backend Offline — Demo Mode</span>';
+    document.getElementById('dashboard-sub').textContent = '⚠️ Demo mode — run start-backend.bat for live data';
+  }
 }
-
-function setStatus(online) {
-  const s = document.getElementById('bstatus');
-  const t = document.getElementById('btext');
-  s.innerHTML = `<span class="dot" style="background:${online?'var(--green)':'var(--amber)'}"></span><span>${online?'Backend Online':'Demo Mode'}</span>`;
+ 
+// ── Navigation ────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
 }
-
-// ─── Navigation ───────────────────────────────────────────────────────────────
-function go(id, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.nav').forEach(n => n.classList.remove('on'));
-  document.getElementById('page-' + id).classList.add('on');
-  el.classList.add('on');
-}
-
-// ─── Data helpers ─────────────────────────────────────────────────────────────
-async function apiFetch(path, fallback) {
-  try {
-    const r = await fetch(API + path, {signal: AbortSignal.timeout(5000)});
-    if (!r.ok) throw new Error(r.status);
-    return await r.json();
-  } catch { return fallback; }
-}
-
-const uid = () => {
-  let id = localStorage.getItem('ai_uid');
-  if (!id) { id = 'user_' + Math.random().toString(36).substr(2,9); localStorage.setItem('ai_uid', id); }
-  return id;
-};
-
-function dur(s) {
-  if (!s) return '0m';
-  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
-  return h > 0 ? h+'h '+m+'m' : m+'m';
-}
-
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+ 
+// ── Dashboard ─────────────────────────────────────────────
 async function loadDashboard() {
-  const [W, D] = await Promise.all([
-    apiFetch('/api/report/weekly?user_id='+uid(), demoWeekly()),
-    apiFetch('/api/report/daily?user_id='+uid(), demoDaily())
-  ]);
-
-  document.getElementById('kpis').innerHTML = [
-    {l:'Focus Time',  v:W.focus_hours+'h',    c:'var(--accent)', i:'🎯', s:'This week'},
-    {l:'Routine',     v:W.routine_hours+'h',  c:'var(--cyan)',   i:'🔄', s:'Emails + news'},
-    {l:'Efficiency',  v:W.efficiency+'%',     c:'var(--green)',  i:'⚡', s:'Focus / total'},
-    {l:'Sessions',    v:W.total_sessions,     c:'var(--amber)',  i:'📌', s:'This week'},
-  ].map(s=>`<div class="card"><div class="stat-l">${s.l}</div><div style="font-size:24px;margin:6px 0 2px">${s.i}</div><div class="stat-n" style="color:${s.c}">${s.v}</div><div class="stat-s">${s.s}</div></div>`).join('');
-
-  const days = (W.daily_focus||[]).map(d=>d.day);
-  const vals = (W.daily_focus||[]).map(d=>d.focus_hours);
-
-  if (charts.bar) charts.bar.destroy();
-  charts.bar = new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: { labels: days, datasets: [{ data: vals, backgroundColor: vals.map((_,i) => i === vals.length-1 ? '#6366f1' : 'rgba(99,102,241,0.45)'), borderRadius: 6, borderSkipped: false }] },
-    options: { responsive:true, plugins:{legend:{display:false}}, scales:{
-      x:{grid:{display:false},ticks:{color:'#4a5570',font:{size:11}}},
-      y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4a5570',font:{size:11}},beginAtZero:true}
-    }}
-  });
-
-  if (charts.ring) charts.ring.destroy();
-  const eff = W.efficiency || 0;
-  charts.ring = new Chart(document.getElementById('ringChart'), {
-    type: 'doughnut',
-    data: { datasets:[{ data:[eff, 100-eff], backgroundColor:['#6366f1','#1d2840'], borderWidth:0 }] },
-    options: { cutout:'72%', plugins:{legend:{display:false}}, animation:{animateRotate:true} }
-  });
-  document.getElementById('ringVal').textContent = eff + '%';
-  document.getElementById('ring-msg').textContent = eff>=70?'🏆 Excellent week!':eff>=50?'👍 Good progress':'💪 Keep going!';
-
-  if (D?.sessions?.length) {
-    document.getElementById('sess-card').style.display = 'block';
-    document.getElementById('sess-list').innerHTML = D.sessions.map(s=>`
-      <div class="row">
-        <div><div style="font-size:13px;font-weight:500">${s.task_name}</div><div style="font-size:11px;color:var(--muted)">${s.is_active?'● Active now':''}</div></div>
-        <div class="badge">${s.is_active?'Active':dur(s.duration_seconds)}</div>
-      </div>`).join('');
-  }
-}
-
-// ─── Focus ────────────────────────────────────────────────────────────────────
-async function loadFocus() {
-  const sess = await apiFetch('/api/focus/history/'+uid(), demoSessions());
-  const todaySec = sess.filter(s=>new Date(s.start_time).toDateString()===new Date().toDateString())
-    .reduce((a,s)=>a+(s.duration_seconds||0),0);
-  const best = Math.max(...sess.map(s=>s.duration_seconds||0), 0);
-  document.getElementById('f-today').textContent = (todaySec/3600).toFixed(1)+'h';
-  document.getElementById('f-week').textContent = sess.length;
-  document.getElementById('f-best').textContent = dur(best);
-  document.getElementById('focus-list').innerHTML = sess.length
-    ? sess.map(s=>`<div class="row"><div><div style="font-size:13px;font-weight:500">${s.task_name}</div><div style="font-size:11px;color:var(--muted)">${s.start_time?new Date(s.start_time).toLocaleString():''}</div></div><div class="badge">${dur(s.duration_seconds)}</div></div>`).join('')
-    : '<div style="color:var(--muted);font-size:13px;padding:12px">No sessions yet. Start a focus session from the extension.</div>';
-}
-
-// ─── Emails ───────────────────────────────────────────────────────────────────
-async function loadEmails() {
-  const emails = await apiFetch('/api/emails/'+uid(), demoEmails());
-  const unread = emails.filter(e=>e.is_unread).length;
-  if (unread) {
-    const b = document.getElementById('unread-badge');
-    b.style.display = 'flex'; b.textContent = unread + ' unread';
-  }
-  document.getElementById('email-list').innerHTML = emails.length
-    ? emails.map(e=>`
-      <div class="erow" style="${e.is_unread?'background:rgba(99,102,241,0.04)':''}">
-        <div class="av">${(e.sender_name||e.sender||'?')[0].toUpperCase()}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;justify-content:space-between;gap:8px">
-            <span style="font-size:13px;font-weight:${e.is_unread?600:400};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.sender_name||e.sender)}</span>
-            <span style="font-size:10px;color:var(--muted);flex-shrink:0">${e.created_at?new Date(e.created_at).toLocaleDateString():''}</span>
-          </div>
-          <div style="font-size:12px;font-weight:${e.is_unread?600:400};color:${e.is_unread?'var(--text)':'var(--sub)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.subject)}</div>
-          <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.snippet||'')}</div>
-        </div>
-        ${e.is_unread?'<div class="udot"></div>':''}
-      </div>`).join('')
-    : '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No emails captured yet.</div>';
-}
-
-// ─── News ─────────────────────────────────────────────────────────────────────
-async function loadNews() {
-  const articles = await apiFetch('/api/news', demoNews());
-  document.getElementById('news-list').innerHTML = articles.length
-    ? articles.map(a=>`
-      <div class="ncard" onclick="window.open('${a.url&&a.url!='#'?a.url:''}','_blank')">
-        <div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:6px">${esc(a.headline)}</div>
-        ${a.summary?`<div style="font-size:12px;color:var(--muted);line-height:1.5">${esc(a.summary)}</div>`:''}
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
-          <span class="tag">${esc(a.source||'unknown')}</span>
-          <span style="font-size:10px;color:var(--muted)">${a.timestamp?new Date(a.timestamp).toLocaleString():''}</span>
-        </div>
-      </div>`).join('')
-    : '<div style="color:var(--muted);font-size:13px;padding:12px">No news captured yet.</div>';
-}
-
-// ─── Activity ─────────────────────────────────────────────────────────────────
-async function loadActivity() {
-  const acts = await apiFetch('/api/activity/'+uid(), demoActivity());
-  const icons = {reading_email:'📧',reading_news:'📰',tab_switch:'🔀',focus_session:'🎯'};
-  const colors = {reading_email:'var(--accent)',reading_news:'var(--cyan)',tab_switch:'var(--amber)',focus_session:'var(--green)'};
-  const counts = {};
-  acts.forEach(a => counts[a.activity_type]=(counts[a.activity_type]||0)+1);
-  document.getElementById('act-kpis').innerHTML = Object.entries(counts)
-    .map(([t,c])=>`<div class="card"><div style="font-size:22px;margin-bottom:7px">${icons[t]||'⚪'}</div><div class="stat-n" style="color:${colors[t]||'var(--sub)'};font-size:26px">${c}</div><div class="stat-l" style="margin-top:4px">${t.replace(/_/g,' ')}</div></div>`).join('');
-  document.getElementById('act-list').innerHTML = acts.map(a=>`
-    <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;background:var(--bg);border-radius:9px;border:1px solid var(--border)">
-      <span style="font-size:16px;flex-shrink:0">${icons[a.activity_type]||'⚪'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:500;color:${colors[a.activity_type]||'var(--sub)'}">${a.activity_type.replace(/_/g,' ')}</div>
-        <div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.url||''}</div>
-      </div>
-      <span style="font-size:10px;color:var(--muted);flex-shrink:0">${a.timestamp?new Date(a.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</span>
-    </div>`).join('');
-}
-
-// ─── Reports ──────────────────────────────────────────────────────────────────
-async function loadReports() {
-  const W = await apiFetch('/api/report/weekly?user_id='+uid(), demoWeekly());
-  const cmds = await apiFetch('/api/report/commands/'+uid(), []);
-  document.getElementById('rep-kpis').innerHTML = [
-    {l:'Focus',    v:W.focus_hours+'h',   c:'var(--accent)'},
-    {l:'Routine',  v:W.routine_hours+'h', c:'var(--cyan)'},
-    {l:'Efficiency',v:W.efficiency+'%',   c:'var(--green)'},
-    {l:'Sessions', v:W.total_sessions,    c:'var(--amber)'},
-    {l:'Emails',   v:W.email_count??0,    c:'var(--pink)'},
-  ].map(s=>`<div class="card"><div class="stat-l">${s.l}</div><div class="stat-n" style="color:${s.c};font-size:26px">${s.v}</div></div>`).join('');
-
-  const days = (W.daily_focus||[]).map(d=>d.day);
-  const vals = (W.daily_focus||[]).map(d=>d.focus_hours);
-  if (charts.rep) charts.rep.destroy();
-  charts.rep = new Chart(document.getElementById('repChart'), {
-    type:'bar', data:{labels:days,datasets:[{label:'Hours',data:vals,backgroundColor:'rgba(99,102,241,0.6)',borderRadius:6,borderSkipped:false}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#4a5570'}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4a5570'},beginAtZero:true}}}
-  });
-
-  if (cmds.length) {
-    document.getElementById('cmd-hist-card').style.display='block';
-    document.getElementById('cmd-list').innerHTML = cmds.map(c=>`
-      <div style="padding:10px 13px;background:var(--bg);border-radius:9px;border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:12px;font-weight:500">${esc(c.command)}</span>
-          <span class="badge" style="font-size:10px">${c.intent||'general'}</span>
-        </div>
-        <div style="font-size:11px;color:var(--muted)">${esc((c.result||'').slice(0,120))}${(c.result||'').length>120?'...':''}</div>
-      </div>`).join('');
-  }
-}
-
-// ─── Chat ─────────────────────────────────────────────────────────────────────
-function addMsg(role, text) {
-  const box = document.getElementById('msgs');
-  const d = document.createElement('div'); d.className = 'm ' + role;
-  const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  d.innerHTML = `<div class="m-meta">${role==='ai'?'AI · ':'You · '}${t}</div><div class="b ${role}">${esc(text)}</div>`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
-}
-
-function showTyping() {
-  const box = document.getElementById('msgs');
-  const d = document.createElement('div'); d.className='m a'; d.id='typing';
-  d.innerHTML=`<div class="m-meta">AI · thinking</div><div class="b a"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
-}
-
-async function send(text) {
-  if (busy || !text.trim()) return;
-  busy = true;
-  document.getElementById('sendbtn').disabled = true;
-  document.getElementById('sendbtn').innerHTML = '<div class="spinner"></div>';
-  addMsg('user', text);
-  showTyping();
+  let weekly, daily;
   try {
-    const r = await fetch(API + '/api/command', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id: uid(), command: text}),
-      signal: AbortSignal.timeout(30000)
-    });
-    const data = await r.json();
-    document.getElementById('typing')?.remove();
-    addMsg('ai', data.result || 'No response received.');
-  } catch(e) {
-    document.getElementById('typing')?.remove();
-    addMsg('ai', '⚠️ Backend not reachable.\n\nTo get real AI responses:\n1. Double-click start-backend.bat\n2. Wait for "Uvicorn running on http://127.0.0.1:8000"\n3. Refresh this page\n\nThe dashboard still works in demo mode without the backend.');
+    const [wr, dr] = await Promise.all([
+      fetch(API + '/api/report/weekly?user_id=' + getUserId()).then(r=>r.json()),
+      fetch(API + '/api/report/daily?user_id=' + getUserId()).then(r=>r.json())
+    ]);
+    weekly = wr; daily = dr;
+  } catch {
+    weekly = { focus_hours:18.5, routine_hours:8.2, efficiency:69, total_sessions:12,
+      daily_focus:[{day:'Mon',focus_hours:2.5},{day:'Tue',focus_hours:3.2},{day:'Wed',focus_hours:1.8},
+        {day:'Thu',focus_hours:4.0},{day:'Fri',focus_hours:3.5},{day:'Sat',focus_hours:2.0},{day:'Sun',focus_hours:1.5}] };
+    daily = { focus_hours: 2.5, sessions_today: 2, sessions: [
+      {task_name:'Morning Deep Work', duration_seconds:5400, is_active:false},
+      {task_name:'Research', duration_seconds:3600, is_active:false}
+    ]};
   }
-  busy = false;
-  document.getElementById('sendbtn').disabled = false;
-  document.getElementById('sendbtn').innerHTML = '↑';
+ 
+  document.getElementById('s-focus').textContent = weekly.focus_hours + 'h';
+  document.getElementById('s-routine').textContent = weekly.routine_hours + 'h';
+  document.getElementById('s-eff').textContent = weekly.efficiency + '%';
+  document.getElementById('s-sessions').textContent = weekly.total_sessions;
+ 
+  // Also fill reports
+  document.getElementById('r-focus').textContent = weekly.focus_hours + 'h';
+  document.getElementById('r-routine').textContent = weekly.routine_hours + 'h';
+  document.getElementById('r-eff').textContent = weekly.efficiency + '%';
+  document.getElementById('r-sessions').textContent = weekly.total_sessions;
+  document.getElementById('r-emails').textContent = weekly.email_count ?? 0;
+  document.getElementById('r-cog-saved').textContent = (weekly.cognitive_hours_saved || 0) + 'h';
+  document.getElementById('r-longest').textContent = (weekly.longest_session_minutes || 0) + 'm';
+  document.getElementById('r-waw').textContent = (weekly.work_about_work_pct || 0) + '%';
+  if (weekly.best_focus_day) {
+    document.getElementById('r-best-day').textContent = weekly.best_focus_day;
+  }
+  document.getElementById('r-cog-saved').textContent = (weekly.cognitive_hours_saved || 0) + 'h';
+  document.getElementById('r-longest').textContent = (weekly.longest_session_minutes || 0) + 'm';
+  document.getElementById('r-waw').textContent = (weekly.work_about_work_pct || 0) + '%';
+  if (weekly.best_focus_day) {
+    document.getElementById('r-best-day').textContent = weekly.best_focus_day;
 }
-
-function sendInp() { const v=document.getElementById('inp').value.trim(); if(v){send(v);document.getElementById('inp').value='';} }
-function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendInp();} }
-function clearChat() { document.getElementById('msgs').innerHTML=''; addMsg('ai','Chat cleared! How can I help?'); }
-
-// ─── Settings ────────────────────────────────────────────────────────────────
-function saveSettings() {
-  const url = document.getElementById('bu-input').value.trim();
-  if (url) {
-    localStorage.setItem('backend_url', url); API = url;
-    document.getElementById('save-msg').style.display = 'block';
-    setTimeout(()=>document.getElementById('save-msg').style.display='none', 2000);
-    checkBackend().then(()=>{ loadDashboard(); loadFocus(); loadEmails(); loadNews(); loadActivity(); loadReports(); });
+ 
+  const days = (weekly.daily_focus||[]).map(d=>d.day);
+  const vals = (weekly.daily_focus||[]).map(d=>d.focus_hours);
+ 
+  // Focus area chart
+  if (focusChart) focusChart.destroy();
+  focusChart = new Chart(document.getElementById('focusChart'), {
+    type: 'bar',
+    data: { labels: days, datasets: [{ data: vals, backgroundColor: 'rgba(99,102,241,0.7)',
+      borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, plugins: { legend:{display:false} },
+      scales: { x:{grid:{display:false},ticks:{color:'#4a5568',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4a5568',font:{size:11}}} } }
+  });
+ 
+  // Pie chart
+  if (splitChart) splitChart.destroy();
+  splitChart = new Chart(document.getElementById('splitChart'), {
+    type: 'doughnut',
+    data: { labels:['Focus','Routine'],
+      datasets:[{data:[weekly.focus_hours,weekly.routine_hours],
+        backgroundColor:['#6366f1','#22d3ee'], borderWidth:0, hoverOffset:4}] },
+    options: { responsive:true, cutout:'65%',
+      plugins:{ legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11},padding:12}} } }
+  });
+ 
+  // Report chart
+  if (reportChart) reportChart.destroy();
+  reportChart = new Chart(document.getElementById('reportChart'), {
+    type: 'bar',
+    data: { labels: days, datasets: [{ label:'Hours', data: vals,
+      backgroundColor:'rgba(99,102,241,0.7)', borderRadius:6, borderSkipped:false }] },
+    options: { responsive:true, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{display:false},ticks:{color:'#4a5568'}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#4a5568'}} } }
+  });
+ 
+  // Today sessions
+  if (daily?.sessions?.length) {
+    document.getElementById('today-sessions-card').style.display = 'block';
+    document.getElementById('today-sessions').innerHTML = daily.sessions.map(s => `
+      <div class="session-row">
+        <div>
+          <div style="font-size:13px;font-weight:500">${s.task_name}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.is_active ? '● Active' : ''}</div>
+        </div>
+        <div class="badge">${s.is_active ? 'Active' : Math.round((s.duration_seconds||0)/60) + ' min'}</div>
+      </div>`).join('');
   }
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function esc(t) {
-  return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-// ─── Demo data ────────────────────────────────────────────────────────────────
-function demoWeekly() {
-  return { focus_hours:18.5, routine_hours:8.2, efficiency:69, total_sessions:12, email_count:47,
-    daily_focus:[{day:'Mon',focus_hours:2.5},{day:'Tue',focus_hours:3.2},{day:'Wed',focus_hours:1.8},{day:'Thu',focus_hours:4.0},{day:'Fri',focus_hours:3.5},{day:'Sat',focus_hours:2.0},{day:'Sun',focus_hours:1.5}] };
-}
-function demoDaily() {
-  return { focus_hours:2.5, sessions_today:2,
-    sessions:[{task_name:'Morning Deep Work',duration_seconds:5400,is_active:false},{task_name:'Research',duration_seconds:3600,is_active:false}] };
-}
-function demoSessions() {
-  return [
+ 
+// ── Focus ─────────────────────────────────────────────────
+async function loadFocus() {
+  let sessions;
+  try { sessions = await fetch(API + '/api/focus/history/' + getUserId()).then(r=>r.json()); }
+  catch { sessions = [
     {id:1,task_name:'Writing Report',duration_seconds:5400,start_time:new Date(Date.now()-3600000)},
     {id:2,task_name:'Code Review',duration_seconds:3600,start_time:new Date(Date.now()-7200000)},
     {id:3,task_name:'Research',duration_seconds:2700,start_time:new Date(Date.now()-86400000)},
-    {id:4,task_name:'Sprint Planning',duration_seconds:1800,start_time:new Date(Date.now()-172800000)},
-  ];
+    {id:4,task_name:'Planning',duration_seconds:1800,start_time:new Date(Date.now()-172800000)},
+  ]; }
+  document.getElementById('f-total').textContent = sessions.length;
+  const todayTotal = sessions.filter(s => new Date(s.start_time).toDateString() === new Date().toDateString())
+    .reduce((a,s) => a + (s.duration_seconds||0), 0);
+  document.getElementById('f-today').textContent = (todayTotal/3600).toFixed(1) + 'h';
+  document.getElementById('focus-list').innerHTML = sessions.map(s => `
+    <div class="session-row">
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.task_name}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.start_time ? new Date(s.start_time).toLocaleString() : ''}</div>
+      </div>
+      <div class="badge">${fmtDuration(s.duration_seconds)}</div>
+    </div>`).join('');
 }
-function demoEmails() {
-  return [
-    {id:1,sender_name:'GitHub',sender:'noreply@github.com',subject:'3 PRs waiting for review',snippet:'Pull requests on your repositories need attention...',is_unread:true,created_at:new Date()},
-    {id:2,sender_name:'Sarah Johnson',sender:'sarah@co.com',subject:'Q4 Roadmap Sync',snippet:'Can we find a time this week to align on Q4?',is_unread:true,created_at:new Date()},
-    {id:3,sender_name:'Stripe',sender:'receipts@stripe.com',subject:'Invoice #1042 — $299.00',snippet:'Your invoice is due by end of month.',is_unread:false,created_at:new Date()},
-    {id:4,sender_name:'TechCrunch',sender:'newsletter@tc.com',subject:'AI Weekly Digest',snippet:'Top AI stories this week...',is_unread:false,created_at:new Date()},
-    {id:5,sender_name:'LinkedIn',sender:'notify@linkedin.com',subject:'12 new connection requests',snippet:'People in your industry want to connect.',is_unread:false,created_at:new Date()},
-  ];
+ 
+// ── Emails ────────────────────────────────────────────────
+async function loadEmails() {
+  let emails;
+  try { emails = await fetch(API + '/api/emails/' + getUserId()).then(r=>r.json()); }
+  catch { emails = [
+    {id:1,sender_name:'GitHub',sender:'noreply@github.com',subject:'3 PRs waiting for your review',snippet:'Pull requests need attention...',is_unread:true,created_at:new Date()},
+    {id:2,sender_name:'Sarah Johnson',sender:'sarah@company.com',subject:'Q4 Roadmap Sync',snippet:'Can we find a time this week?',is_unread:true,created_at:new Date()},
+    {id:3,sender_name:'Stripe',sender:'receipts@stripe.com',subject:'Invoice #1042 - $299.00',snippet:'Your invoice is due by end of month.',is_unread:false,created_at:new Date()},
+    {id:4,sender_name:'TechCrunch',sender:'newsletter@techcrunch.com',subject:'AI Weekly Digest',snippet:'Top AI stories this week...',is_unread:false,created_at:new Date()},
+  ]; }
+  document.getElementById('email-list').innerHTML = emails.map(e => `
+    <div class="email-row" style="${e.is_unread?'background:rgba(99,102,241,0.04)':''}">
+      <div class="avatar">${(e.sender_name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:8px">
+          <span style="font-size:13px;font-weight:${e.is_unread?600:400};color:${e.is_unread?'var(--text)':'var(--sub)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.sender_name}</span>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0">${e.created_at?new Date(e.created_at).toLocaleDateString():''}</span>
+        </div>
+        <div style="font-size:12px;font-weight:${e.is_unread?600:400};color:${e.is_unread?'var(--text)':'var(--sub)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.subject}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.snippet}</div>
+      </div>
+      ${e.is_unread?'<div class="unread-dot"></div>':''}
+    </div>`).join('');
 }
-function demoNews() {
-  return [
-    {id:1,headline:'OpenAI Releases New Reasoning Model with Improved Capabilities',summary:'The latest model shows significant improvements in complex reasoning and coding tasks.',source:'techcrunch.com',url:'#',timestamp:new Date()},
-    {id:2,headline:'Google DeepMind Updates AlphaFold Protein Structure Predictor',summary:'New version predicts protein structures with unprecedented accuracy using AI.',source:'bbc.com',url:'#',timestamp:new Date()},
-    {id:3,headline:'S&P 500 Rises 0.8% Amid Positive Earnings Reports',summary:'Stock markets responded positively to better-than-expected corporate earnings data.',source:'reuters.com',url:'#',timestamp:new Date()},
-    {id:4,headline:'Climate Summit Reaches New Global Emissions Agreement',summary:'World leaders commit to ambitious new emissions targets in landmark climate deal.',source:'nytimes.com',url:'#',timestamp:new Date()},
-  ];
+ 
+// ── News ──────────────────────────────────────────────────
+async function loadNews() {
+  let articles;
+  try { articles = await fetch(API + '/api/news').then(r=>r.json()); }
+  catch { articles = [
+    {id:1,headline:'OpenAI Releases New Reasoning Model with Improved Capabilities',summary:'The latest model shows significant improvements in complex reasoning tasks.',source:'techcrunch.com',url:'#'},
+    {id:2,headline:'Google DeepMind Updates AlphaFold Protein Structure Predictor',summary:'New version predicts protein structures with unprecedented accuracy.',source:'bbc.com',url:'#'},
+    {id:3,headline:'S&P 500 Rises 0.8% Amid Positive Earnings Reports',summary:'Markets responded positively to better-than-expected earnings.',source:'reuters.com',url:'#'},
+    {id:4,headline:'Climate Summit Reaches New Global Emissions Agreement',summary:'World leaders commit to new targets in landmark climate deal.',source:'nytimes.com',url:'#'},
+  ]; }
+  document.getElementById('news-list').innerHTML = articles.map(a => `
+    <div class="news-card" onclick="window.open('${a.url||'#'}','_blank')">
+      <div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:6px">${a.headline}</div>
+      ${a.summary?`<div style="font-size:12px;color:var(--muted);line-height:1.5">${a.summary}</div>`:''}
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <span class="source-tag">${a.source||'unknown'}</span>
+        <span style="font-size:10px;color:var(--muted)">${a.timestamp?new Date(a.timestamp).toLocaleString():''}</span>
+      </div>
+    </div>`).join('');
 }
-function demoActivity() {
-  return [
+ 
+// ── Activity ──────────────────────────────────────────────
+async function loadActivity() {
+  let acts;
+  try { acts = await fetch(API + '/api/activity/' + getUserId()).then(r=>r.json()); }
+  catch { acts = [
     {id:1,activity_type:'reading_email',url:'https://mail.google.com',timestamp:new Date(Date.now()-600000)},
     {id:2,activity_type:'tab_switch',url:'https://github.com',timestamp:new Date(Date.now()-1200000)},
     {id:3,activity_type:'reading_news',url:'https://techcrunch.com',timestamp:new Date(Date.now()-1800000)},
     {id:4,activity_type:'reading_email',url:'https://mail.google.com',timestamp:new Date(Date.now()-3600000)},
-    {id:5,activity_type:'tab_switch',url:'https://stackoverflow.com',timestamp:new Date(Date.now()-4200000)},
-  ];
+  ]; }
+  const icons = {reading_email:'📧',reading_news:'📰',tab_switch:'🔀',focus_session:'🎯'};
+  const colors = {reading_email:'var(--accent)',reading_news:'var(--cyan)',tab_switch:'var(--amber)',focus_session:'var(--green)'};
+  const counts = {};
+  acts.forEach(a => counts[a.activity_type] = (counts[a.activity_type]||0)+1);
+  document.getElementById('activity-stats').innerHTML = Object.entries(counts).map(([t,c]) => `
+    <div class="card">
+      <div style="font-size:22px;margin-bottom:6px">${icons[t]||'⚪'}</div>
+      <div style="font-size:24px;font-weight:700;color:${colors[t]||'var(--sub)'}">${c}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${t.replace(/_/g,' ')}</div>
+    </div>`).join('');
+  document.getElementById('activity-list').innerHTML = acts.map(a => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#0f1117;border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:16px;flex-shrink:0">${icons[a.activity_type]||'⚪'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:${colors[a.activity_type]||'var(--sub)'}">${a.activity_type.replace(/_/g,' ')}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.url||''}</div>
+      </div>
+      <span style="font-size:11px;color:var(--muted);flex-shrink:0">${a.timestamp?new Date(a.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</span>
+    </div>`).join('');
+}
+ 
+// ── Chat ──────────────────────────────────────────────────
+function addMessage(role, text) {
+  const box = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const time = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = `
+    <div class="msg-meta">${role==='ai'?'AI Assistant · ':''}${time}</div>
+    <div class="bubble ${role}">${escHtml(text)}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+ 
+function showTyping() {
+  const box = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-meta">AI Assistant is thinking...</div>
+    <div class="bubble ai"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+ 
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+ 
+async function sendChat(text) {
+  if (chatBusy || !text.trim()) return;
+  chatBusy = true;
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('send-btn').innerHTML = '<div class="spinner"></div>';
+  addMessage('user', text);
+  showTyping();
+  try {
+    const r = await fetch(API + '/api/command', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: getUserId(), command: text })
+    });
+    const data = await r.json();
+    hideTyping();
+    addMessage('ai', data.result || 'No response received.');
+  } catch {
+    hideTyping();
+    addMessage('ai', '⚠️ Backend not reachable.\n\nTo get real AI responses:\n1. Run start-backend.bat\n2. Wait for "Uvicorn running on http://127.0.0.1:8000"\n3. Refresh this page\n\nIn the meantime, I\'m running in demo mode.');
+  }
+  chatBusy = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('send-btn').innerHTML = '↑';
+}
+ 
+function sendFromInput() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (txt) { sendChat(txt); inp.value = ''; }
+}
+ 
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFromInput(); }
+}
+ 
+function clearChat() {
+  document.getElementById('messages').innerHTML = '';
+  addMessage('ai','Chat cleared! How can I help you?');
+}
+ 
+function saveSettings() {
+  const url = document.getElementById('backend-url-input').value.trim();
+  if (url) { localStorage.setItem('backend_url', url); location.reload(); }
+}
+ 
+// ── Helpers ───────────────────────────────────────────────
+function fmtDuration(s) {
+  if (!s) return '0m';
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h > 0 ? h+'h '+m+'m' : m+'m';
+}
+ 
+function setGreeting() {
+  const h = new Date().getHours();
+  const g = h<12?'morning':h<17?'afternoon':'evening';
+  document.getElementById('greeting').textContent = `Good ${g}, Productivity Pro 👋`;
+}
+ 
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 </script>
 </body>
