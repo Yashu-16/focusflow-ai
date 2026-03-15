@@ -4,13 +4,13 @@ from sqlalchemy import func
 from app.database import get_db
 from app.models.models import FocusSession, Activity, EmailRecord, CommandHistory
 from datetime import datetime, timedelta
-
+ 
 router = APIRouter()
-
-
+ 
+ 
 def get_weekly_stats(db: Session, user_id: str) -> dict:
     week_ago = datetime.now() - timedelta(days=7)
-
+ 
     # Focus time
     sessions = db.query(FocusSession).filter(
         FocusSession.user_id == user_id,
@@ -19,23 +19,23 @@ def get_weekly_stats(db: Session, user_id: str) -> dict:
     ).all()
     focus_seconds = sum(s.duration_seconds or 0 for s in sessions)
     focus_hours = focus_seconds / 3600
-
+ 
     # Activity breakdown
     activities = db.query(Activity).filter(
         Activity.user_id == user_id,
         Activity.timestamp >= week_ago
     ).all()
-
+ 
     activity_counts = {}
     for a in activities:
         activity_counts[a.activity_type] = activity_counts.get(a.activity_type, 0) + 1
-
+ 
     top_activity = max(activity_counts, key=activity_counts.get) if activity_counts else "none"
     routine_hours = len(activities) * 0.05  # estimate
-
+ 
     total_hours = focus_hours + routine_hours
     efficiency = (focus_hours / total_hours * 100) if total_hours > 0 else 0
-
+ 
     # Daily breakdown for chart
     daily_focus = []
     for i in range(7):
@@ -49,7 +49,29 @@ def get_weekly_stats(db: Session, user_id: str) -> dict:
             "date": day.strftime("%Y-%m-%d"),
             "focus_hours": round(day_hours, 2)
         })
-
+ 
+    email_count = db.query(EmailRecord).filter(
+        EmailRecord.user_id == user_id,
+        EmailRecord.created_at >= week_ago
+    ).count()
+ 
+    # Cognitive Hours Saved: each AI-handled item saves 3 min cognitive penalty
+    ai_handled_items = email_count + len(activities)
+    cognitive_minutes_saved = ai_handled_items * 3
+    cognitive_hours_saved = round(cognitive_minutes_saved / 60, 1)
+ 
+    # Focus Depth Score: longest uninterrupted session
+    longest_session_minutes = 0
+    best_focus_day = None
+    if sessions:
+        longest = max(sessions, key=lambda s: s.duration_seconds or 0)
+        longest_session_minutes = round((longest.duration_seconds or 0) / 60)
+        if longest.start_time:
+            best_focus_day = longest.start_time.strftime("%A")
+ 
+    # Work About Work %
+    work_about_work_pct = round((routine_hours / total_hours * 100) if total_hours > 0 else 60, 1)
+ 
     return {
         "focus_hours": round(focus_hours, 2),
         "routine_hours": round(routine_hours, 2),
@@ -58,35 +80,38 @@ def get_weekly_stats(db: Session, user_id: str) -> dict:
         "top_activity": top_activity,
         "activity_breakdown": activity_counts,
         "daily_focus": daily_focus,
-        "email_count": db.query(EmailRecord).filter(
-            EmailRecord.user_id == user_id,
-            EmailRecord.created_at >= week_ago
-        ).count()
+        "email_count": email_count,
+        "cognitive_hours_saved": cognitive_hours_saved,
+        "cognitive_minutes_saved": cognitive_minutes_saved,
+        "ai_handled_items": ai_handled_items,
+        "longest_session_minutes": longest_session_minutes,
+        "best_focus_day": best_focus_day,
+        "work_about_work_pct": work_about_work_pct,
     }
-
-
+ 
+ 
 @router.get("/weekly")
 def weekly_report(user_id: str = "default_user", db: Session = Depends(get_db)):
     stats = get_weekly_stats(db, user_id)
     return stats
-
-
+ 
+ 
 @router.get("/daily")
 def daily_report(user_id: str = "default_user", db: Session = Depends(get_db)):
     today = datetime.now().replace(hour=0, minute=0, second=0)
-
+ 
     sessions = db.query(FocusSession).filter(
         FocusSession.user_id == user_id,
         FocusSession.start_time >= today
     ).all()
-
+ 
     focus_seconds = sum(s.duration_seconds or 0 for s in sessions)
-
+ 
     activities = db.query(Activity).filter(
         Activity.user_id == user_id,
         Activity.timestamp >= today
     ).all()
-
+ 
     return {
         "focus_seconds": focus_seconds,
         "focus_hours": round(focus_seconds / 3600, 2),
@@ -99,14 +124,14 @@ def daily_report(user_id: str = "default_user", db: Session = Depends(get_db)):
             "is_active": s.is_active
         } for s in sessions]
     }
-
-
+ 
+ 
 @router.get("/commands/{user_id}")
 def get_command_history(user_id: str, limit: int = 20, db: Session = Depends(get_db)):
     commands = db.query(CommandHistory).filter(
         CommandHistory.user_id == user_id
     ).order_by(CommandHistory.created_at.desc()).limit(limit).all()
-
+ 
     return [{
         "id": c.id,
         "command": c.command,
